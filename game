@@ -1,0 +1,194 @@
+#include <iostream>
+#include <conio.h>
+#include<windows.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+
+using namespace std;
+
+//setting up global variables
+bool bGameOver, bPrint;
+int iX, iY, iFruitX, iFruitY, iScore;
+
+//arrays for tail of snake
+int aTailX[100], aTailY[100];
+int iNTail;
+
+//enumeration --> creating the variables's only values that it can be
+enum eDirection { STOP = 0, LEFT, RIGHT, UP, DOWN };
+eDirection dir; //direction value/variable
+
+//constant values
+const int iWidth = rand() % 22 + 15;
+const int iHeight = rand() % 22 + 15;
+
+void Setup()
+{
+	bGameOver = false;
+	dir = STOP; //won't move until you start moving it
+	iX = iWidth / 2;
+	iY = iHeight / 2;
+	srand(time(NULL));
+	iFruitX = rand() % iWidth;
+	iFruitY = rand() % iHeight;
+	iScore = 0;
+}
+
+void DrawMap() //drawing a map
+{
+	system("cls"); //clear screen
+	cout << endl << "Score: " << iScore << endl;
+	//printing top and bottom walls
+	for (int i = 0; i <= iWidth + 1; i++)
+		cout << "%";
+	cout << endl;
+
+	for (int i = 0; i < iHeight; i++)
+	{
+		for (int j = 0; j < iWidth; j++)
+		{
+			if (j == 0) cout << "%";
+
+			//to print head
+			if (i == iY && j == iX) cout << "O";
+
+			//to print fruit
+			else if (i == iFruitY && j == iFruitX) cout << "F";
+			else
+			{
+				bPrint = false;
+				for (int k = 0; k < iNTail; k++)
+				{
+					if (aTailX[k] == j && aTailY[k] == i)
+					{
+						bPrint = true;
+						cout << "o";
+					}
+				}
+				if (!bPrint)
+					cout << " ";
+			}
+			if (j == (iWidth - 1)) cout << "%";
+		}
+		cout << endl;
+	}
+	for (int i = 0; i <= iWidth + 1; i++)
+		cout << "%";
+	cout << endl;
+}
+
+void Input()
+{
+	if (_kbhit())//if yes, positive number, if no, zero
+	{
+		//handling the controls
+		switch (_getch())
+		{
+		case 'a':
+			dir = LEFT;
+			break;
+		case 'd':
+			dir = RIGHT;
+			break;
+		case 'w':
+			dir = UP;
+			break;
+		case 's':
+			dir = DOWN;
+			break;
+		case 'x':
+			bGameOver = true;
+			break;
+		}
+
+	}
+}
+void Logic()
+{
+	int iPrevX = aTailX[0];
+	int iPrevY = aTailY[0];
+	int iPrev2X, iPrev2Y;
+	aTailX[0] = iX;
+	aTailY[0] = iY;
+
+	for (int i = 1; i < iNTail; i++)
+	{
+		iPrev2X = aTailX[i];
+		iPrev2Y = aTailY[i];
+		aTailX[i] = iPrevX;
+		aTailY[i] = iPrevY;
+		iPrevX = iPrev2X;
+		iPrevY = iPrev2Y;
+
+	}
+	//changing direction of head, basic movement
+	switch (dir)
+	{
+	case LEFT:
+		iX -= 1;
+		break;
+	case RIGHT:
+		iX += 1;
+		break;
+	case UP:
+		iY -= 1;
+		break;
+	case DOWN:
+		iY += 1;
+		break;
+	default:
+		break;
+	}
+
+	//if snake gets out of the map, game over
+	//if (iX > iWidth || iX < 0 || iY > iHeight || iY < 0) bGameOver = true;
+
+	//if snake hits wall, goes out the other side
+	if (iX >= iWidth)iX = 0;
+	if (iX < 0)iX = iWidth - 1;
+
+	if (iY >= iHeight)iY = 0;
+	if (iY < 0)iY = iHeight - 1;
+	//if snake eats itself
+	for (int i = 0; i < iNTail; i++)
+	{
+		if (aTailX[i] == iX && aTailY[i] == iY)
+			bGameOver = true;
+
+	}
+
+	//if snake gets fruit
+	if (iX == iFruitX && iY == iFruitY)
+	{
+		iScore += 10;
+		iFruitX = rand() % iWidth;
+		iFruitY = rand() % iHeight;
+		iNTail++;
+	}
+}
+
+int main()
+{
+
+	Setup();
+	int iInput;
+	cout << "Welcome to the Snake Game!";
+	cout << " Collect fruits to lengthen the snake, but don't eat yourself!";
+	cout << "\nUse WASD to move.";
+	cout << "\nOkay? Hit 1 to play.";
+	cin >> iInput;
+	while (!bGameOver)
+	{	
+		if (iInput == 1)
+		{
+			DrawMap();
+			Input();
+			Logic();
+			Sleep(50);
+		}
+		
+	}
+	return 0;
+}
